@@ -20,25 +20,17 @@ import com.stylo.batterymonitor.ui.BatteryWebViewScreen
 import com.stylo.batterymonitor.ui.theme.StyloBatteryMonitorTheme
 
 class MainActivity : ComponentActivity() {
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         window.isNavigationBarContrastEnforced = false
         MobileAds.initialize(this) {}
-        AdMobManager.preloadInterstitial(this)
-        AdMobManager.preloadRewarded(this)
         requestNotificationPermission()
-        AdMobManager.showInterstitialIfReady(this)
-
         setContent {
             StyloBatteryMonitorTheme {
-                val viewModel: BatteryViewModel = viewModel()
+                val vm: BatteryViewModel = viewModel()
                 Column(modifier = Modifier.fillMaxSize()) {
-                    BatteryWebViewScreen(
-                        modifier = Modifier.weight(1f),
-                        vm = viewModel,
-                    )
+                    BatteryWebViewScreen(modifier = Modifier.weight(1f), vm = vm)
                     AdBannerComposable()
                 }
             }
@@ -47,11 +39,8 @@ class MainActivity : ComponentActivity() {
 
     private fun requestNotificationPermission() {
         if (Build.VERSION.SDK_INT >= 33 &&
-            ActivityCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
-        ) {
-            ActivityCompat.requestPermissions(
-                this, arrayOf(Manifest.permission.POST_NOTIFICATIONS), 4202
-            )
+            ActivityCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.POST_NOTIFICATIONS), 4202)
         }
     }
 }
