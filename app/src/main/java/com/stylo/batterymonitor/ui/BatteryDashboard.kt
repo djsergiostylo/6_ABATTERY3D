@@ -34,7 +34,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.stylo.batterymonitor.BuildConfig
+import com.stylo.abattery3d.BuildConfig
 import com.stylo.batterymonitor.data.BatterySnapshot
 import com.stylo.batterymonitor.ui.theme.BatteryGreen
 import com.stylo.batterymonitor.ui.theme.CardSurface
@@ -47,10 +47,7 @@ fun BatteryDashboard(viewModel: BatteryViewModel) {
     val snapshot by viewModel.snapshot.collectAsStateWithLifecycle()
     Scaffold(containerColor = MaterialTheme.colorScheme.background) { innerPadding ->
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .padding(horizontal = 16.dp, vertical = 14.dp),
+            modifier = Modifier.fillMaxSize().padding(innerPadding).padding(horizontal = 16.dp, vertical = 14.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Header(snapshot)
@@ -66,39 +63,20 @@ fun BatteryDashboard(viewModel: BatteryViewModel) {
 private fun ThreeDBatteryCard(snapshot: BatterySnapshot) {
     val lifecycleOwner = LocalLifecycleOwner.current
     var view: Abateri3DView? = null
-
-    Card(
-        modifier = Modifier.fillMaxWidth().height(300.dp),
-        shape = RoundedCornerShape(28.dp),
-        colors = CardDefaults.cardColors(containerColor = CardSurface),
-    ) {
+    Card(modifier = Modifier.fillMaxWidth().height(300.dp), shape = RoundedCornerShape(28.dp), colors = CardDefaults.cardColors(containerColor = CardSurface)) {
         AndroidView(
-            factory = { context ->
-                Abateri3DView(context).also {
-                    view = it
-                    it.attachToLifecycle(lifecycleOwner)
-                }
-            },
-            update = { webView ->
-                view = webView
-                webView.setBatteryData(
-                    snapshot.levelPercent.coerceIn(0, 100),
-                    snapshot.temperatureC ?: 0.0,
-                )
-            },
+            factory = { context -> Abateri3DView(context).also { view = it; it.attachToLifecycle(lifecycleOwner) } },
+            update = { webView -> view = webView; webView.setBatteryData(snapshot.levelPercent.coerceIn(0, 100), snapshot.temperatureC ?: 0.0) },
             modifier = Modifier.fillMaxSize(),
         )
     }
-
-    DisposableEffect(lifecycleOwner) {
-        onDispose { view = null }
-    }
+    DisposableEffect(lifecycleOwner) { onDispose { view = null } }
 }
 
 @Composable
 private fun BuildInfo() {
     Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween, Alignment.CenterVertically) {
-        Text("ABATERI  v${BuildConfig.VERSION_NAME}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.Medium)
+        Text("ABATTERY3D  v${BuildConfig.VERSION_NAME}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.Medium)
         Text("Build ${BuildConfig.VERSION_CODE}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.Medium)
     }
 }
@@ -107,14 +85,10 @@ private fun BuildInfo() {
 private fun Header(snapshot: BatterySnapshot) {
     Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween, Alignment.CenterVertically) {
         Column {
-            Text("ABATERI", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.Bold, letterSpacing = 1.6.sp)
+            Text("ABATTERY3D", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.Bold, letterSpacing = 1.6.sp)
             Text(if (snapshot.isCharging || snapshot.isFull) "Charging telemetry" else "Live telemetry", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.SemiBold)
         }
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Box(Modifier.size(8.dp).clip(CircleShape).background(BatteryGreen))
-            Spacer(Modifier.size(7.dp))
-            Text("LIVE", style = MaterialTheme.typography.labelSmall, color = BatteryGreen, fontWeight = FontWeight.Bold)
-        }
+        Row(verticalAlignment = Alignment.CenterVertically) { Box(Modifier.size(8.dp).clip(CircleShape).background(BatteryGreen)); Spacer(Modifier.size(7.dp)); Text("LIVE", style = MaterialTheme.typography.labelSmall, color = BatteryGreen, fontWeight = FontWeight.Bold) }
     }
 }
 
@@ -128,13 +102,7 @@ private fun SecondaryMetrics(snapshot: BatterySnapshot) {
         Metric("POWER", snapshot.powerMw?.let { formatPower(it) } ?: "--", "mW"),
         Metric("HEALTH", healthLabel(snapshot.health), ""),
     )
-    LazyVerticalGrid(
-        columns = GridCells.Fixed(2),
-        modifier = Modifier.fillMaxWidth().height(220.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-        userScrollEnabled = false,
-    ) { items(metrics) { MetricCard(it) } }
+    LazyVerticalGrid(columns = GridCells.Fixed(2), modifier = Modifier.fillMaxWidth().height(220.dp), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(12.dp), userScrollEnabled = false) { items(metrics) { MetricCard(it) } }
 }
 
 @Composable
@@ -154,10 +122,7 @@ private fun MetricCard(metric: Metric) {
 private fun StatusCard(snapshot: BatterySnapshot) {
     Card(Modifier.fillMaxWidth(), RoundedCornerShape(20.dp), CardDefaults.cardColors(containerColor = CardSurface)) {
         Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 13.dp), Arrangement.SpaceBetween, Alignment.CenterVertically) {
-            Column {
-                Text("STATUS", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
-                Text(statusLabel(snapshot), style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.SemiBold)
-            }
+            Column { Text("STATUS", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.Bold, letterSpacing = 1.sp); Text(statusLabel(snapshot), style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.SemiBold) }
             Text(snapshot.technology, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
