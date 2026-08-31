@@ -1,0 +1,60 @@
+name: Build ABATTERY3D Debug APK
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build debug APK
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.11.1'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Accept licenses
+        run: yes | sdkmanager --licenses || true
+
+      - name: Install SDK components
+        run: sdkmanager "platforms;android-35" "build-tools;35.0.0" "platform-tools"
+
+      - name: Get version info
+        id: version
+        run: |
+          VERSION_NAME=$(grep versionName app/build.gradle.kts | head -1 | grep -oP '"\K[^\"]+')
+          VERSION_CODE=$(grep versionCode app/build.gradle.kts | head -1 | grep -oP '\d+')
+          DATE=$(date +'%Y%m%d_%H%M')
+          SHORT_SHA=${GITHUB_SHA::7}
+          echo "name=ABATTERY3D_v${VERSION_NAME}_build${VERSION_CODE}_${DATE}_${SHORT_SHA}" >> $GITHUB_OUTPUT
+          echo "apk_name=ABATTERY3D_v${VERSION_NAME}_${DATE}_${SHORT_SHA}.apk" >> $GITHUB_OUTPUT
+
+      - name: Build debug APK
+        run: gradle assembleDebug --no-daemon --stacktrace
+
+      - name: Rename APK with version
+        run: |
+          mv app/build/outputs/apk/debug/app-debug.apk \
+             app/build/outputs/apk/debug/${{ steps.version.outputs.apk_name }}
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.version.outputs.name }}
+          path: app/build/outputs/apk/debug/${{ steps.version.outputs.apk_name }}
+          retention-days: 30
