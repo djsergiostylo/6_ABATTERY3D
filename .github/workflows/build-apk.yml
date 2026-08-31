@@ -34,27 +34,12 @@ jobs:
       - name: Install SDK components
         run: sdkmanager "platforms;android-35" "build-tools;35.0.0" "platform-tools"
 
-      - name: Get version info
-        id: version
-        run: |
-          VERSION_NAME=$(grep versionName app/build.gradle.kts | head -1 | grep -oP '"\K[^\"]+')
-          VERSION_CODE=$(grep versionCode app/build.gradle.kts | head -1 | grep -oP '\d+')
-          DATE=$(date +'%Y%m%d_%H%M')
-          SHORT_SHA=${GITHUB_SHA::7}
-          echo "name=ABATTERY3D_v${VERSION_NAME}_build${VERSION_CODE}_${DATE}_${SHORT_SHA}" >> $GITHUB_OUTPUT
-          echo "apk_name=ABATTERY3D_v${VERSION_NAME}_${DATE}_${SHORT_SHA}.apk" >> $GITHUB_OUTPUT
-
       - name: Build debug APK
         run: gradle assembleDebug --no-daemon --stacktrace
-
-      - name: Rename APK with version
-        run: |
-          mv app/build/outputs/apk/debug/app-debug.apk \
-             app/build/outputs/apk/debug/${{ steps.version.outputs.apk_name }}
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ steps.version.outputs.name }}
-          path: app/build/outputs/apk/debug/${{ steps.version.outputs.apk_name }}
+          name: ABATTERY3D-debug
+          path: app/build/outputs/apk/debug/app-debug.apk
           retention-days: 30
